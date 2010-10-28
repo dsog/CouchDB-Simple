@@ -1,0 +1,53 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use CouchDB::Simple;
+use JSON qw(from_json);
+use App::Rad;
+
+my $db = CouchDB::Simple->new();
+
+App::Rad->run();
+
+sub setup {
+    my $c = shift;
+    $c->register_commands({
+        add    => 'add something',
+        delete => 'delete something, be careful',
+        update => 'update it',
+        get    => 'get it get it get it',
+    });
+}
+
+sub pre_process {
+    my $c = shift;
+    my ($name) = @{$c->argv};
+    die "name is required" unless defined $name;
+    $c->stash->{name} = $name;
+}
+
+sub add {
+    my $c = shift;
+    my $json = do { local $/; <STDIN> };
+    my $person = from_json($json);
+    return $db->create_document($c->stash->{name}, $person);
+}
+
+sub delete {
+    my $c = shift;
+    return $db->delete_document($c->stash->{name});
+}
+
+sub update {
+    my $c = shift;
+    my $json = do { local $/; <STDIN> };
+    my $person = from_json($json);
+    return $db->update_document($c->stash->{name}, $person, 0);
+}
+
+sub get {
+    my $c = shift;
+    return $db->get_document($c->stash->{name});
+}
+
+#my $res = $db->getAllDocuments;
