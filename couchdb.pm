@@ -5,7 +5,7 @@ use LWP::UserAgent;
 
 my $hostname = "localhost";
 my $port = "5984";
-my $dbname = "sampleDB";
+my $dbname = "sampledb";
 
 my $agent = LWP::UserAgent->new();
 
