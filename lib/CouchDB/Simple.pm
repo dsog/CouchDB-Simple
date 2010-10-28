@@ -1,5 +1,7 @@
-package couchdb;
+package CouchDB::Simple;
 
+use warnings;
+use strict;
 use JSON;
 use LWP::UserAgent;
 
