@@ -2,103 +2,101 @@ package CouchDB::Simple;
 
 use warnings;
 use strict;
-use JSON;
+use JSON qw(from_json to_json);
 use LWP::UserAgent;
 
-my $hostname = "localhost";
-my $port = "5984";
-my $dbname = "sampledb";
+our $VERSION = 0.0001;
 
 my $agent = LWP::UserAgent->new();
 
-sub new
-{
-	my($class, $hostname, $port, $dbname) = @_;
-	#TODO: Set the class parameters.
-	my $self = {};
+sub new {
+	my($class, %args) = @_;
+    my $host = $args{host} || 'localhost';
+    my $port = $args{port} || 5984;
+    my $db   = $args{db}   || 'sampledb';
+    my $self = { base_uri => "http://$host:$port/$db" };
 	bless $self, $class;
 	return $self;
 }
 
-sub createDocument
-{
-	my ($self, $docName, $doc) = @_;
-
-	my @arguments;
-	push (@arguments, "PUT");
-	push (@arguments, "http://$hostname:$port/$dbname/$docName");
-	push (@arguments, []);
-	push (@arguments, encode_json($doc));
-
-	my $req = HTTP::Request->new(@arguments);
+sub create_document {
+	my ($self, $id, $doc) = @_;
+	my $json = to_json($doc);
+    my $req = HTTP::Request->new(PUT => "$self->{base_uri}/$id", [], $json);
 	return $agent->request($req)->content;
 }
 
-sub deleteDocument
-{
-	my ($self, $docName) = @_;
-	my $res = decode_json($self->getDocument($docName));
-	if (defined $res->{"_rev"})
-	{
-		my $rev = $res->{"_rev"}; 
-		my @arguments;
-		push (@arguments, "DELETE");
-		push (@arguments,
-		"http://$hostname:$port/$dbname/$docName?rev=$rev");
+sub delete_document {
+	my ($self, $id) = @_;
+	my $json = $self->get_document($id);
+	my $data = from_json($json);
 
-		my $req = HTTP::Request->new(@arguments);
-		return $agent->request($req)->content;
-	}
-	else
-	{
-		return encode_json($res) . "\n";
-	}
+    return $json if $data->{error};
+
+    my $uri = "$self->{base_uri}/$id?rev=$data->{_rev}";
+    my $req = HTTP::Request->new(DELETE => $uri);
+    return $agent->request($req)->content;
 }
 
-sub getDocument
-{
-	my ($self, $docName) = @_;
-
-	my @arguments;
-	push (@arguments, "GET");
-	push (@arguments, "http://$hostname:$port/$dbname/$docName");
-
-	my $req = HTTP::Request->new(@arguments);
+sub get_document {
+	my ($self, $id) = @_;
+	my $req = HTTP::Request->new(GET => "$self->{base_uri}/$id");
 	return $agent->request($req)->content;
 }
 
-sub updateDocument
-{
-	my ($self, $docName, $doc, $merge) = @_;
+sub update_document {
+	my ($self, $id, $doc, $merge) = @_;
 	$merge = 1 unless defined $merge;
 
-	my $res = decode_json($self->getDocument($docName));
-	$doc->{"_rev"} = $res->{"_rev"};
-	my $newDoc = $doc;
+	my $data = from_json($self->get_document($id));
+	$doc->{_rev} = $data->{_rev};
+    $doc = { %$data, %$doc } if $merge;
 
-	if($merge == 1)
-	{
-		$newDoc = { %$res, %$doc };
-	}
-
-	my @arguments;
-	push (@arguments, "PUT");
-	push (@arguments, "http://$hostname:$port/$dbname/$docName");
-	push (@arguments, []);
-	push (@arguments, encode_json($newDoc));
-
-	my $req = HTTP::Request->new(@arguments);
+	my $req = HTTP::Request->new(PUT => "$self->{base_uri}/$id",
+        [], to_json($doc));
 	return $agent->request($req)->content;
 }
 
-sub getAllDocuments
-{
+sub get_all_documents {
 	my ($self) = @_;
-
-	my @arguments;
-	push (@arguments, "GET");
-	push (@arguments, "http://$hostname:$port/$dbname/_all_docs");
-
-	my $req = HTTP::Request->new(@arguments);
+	my $req = HTTP::Request->new(GET => "$self->{base_uri}/_all_docs");
 	return $agent->request($req)->content;
 }
+
+=head1 NAME
+
+CouchDB::Simple - A simple interface to CouchDB
+
+=head1 VERSION
+
+Version 0.0001
+
+=head1 SYNOPSIS
+
+This class implements the functionality needed to interact with CouchDB.
+
+Example usage:
+
+    use CouchDB::Simple
+    my $couch = CouchDB::Simple->new(
+        db   => 'some_db',
+        host => 'localhost', # defaults to 'localhost'
+        port => 5984, # defaults to 5984
+    );
+
+=head1 METHODS
+
+=head2 create_document($id, \%document)
+
+Add a new document with the given id.
+
+=head1 AUTHOR
+
+Khaled Hussein <khaled.hussein@gmail.com>
+
+=head1 SUPPORT
+
+You can find documentation for this module with the perldoc command.
+
+    perldoc CouchDB::Simple
+

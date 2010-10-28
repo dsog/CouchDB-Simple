@@ -21,33 +21,33 @@ sub setup {
 
 sub pre_process {
     my $c = shift;
-    my ($name) = @{$c->argv};
-    die "name is required" unless defined $name;
-    $c->stash->{name} = $name;
+    my ($id) = @{$c->argv};
+    die "id of document is required" unless defined $id;
+    $c->stash->{id} = $id;
 }
 
 sub add {
     my $c = shift;
     my $json = do { local $/; <STDIN> };
     my $person = from_json($json);
-    return $db->create_document($c->stash->{name}, $person);
+    return $db->create_document($c->stash->{id}, $person);
 }
 
 sub delete {
     my $c = shift;
-    return $db->delete_document($c->stash->{name});
+    return $db->delete_document($c->stash->{id});
 }
 
 sub update {
     my $c = shift;
     my $json = do { local $/; <STDIN> };
     my $person = from_json($json);
-    return $db->update_document($c->stash->{name}, $person, 0);
+    return $db->update_document($c->stash->{id}, $person, 0);
 }
 
 sub get {
     my $c = shift;
-    return $db->get_document($c->stash->{name});
+    return $db->get_document($c->stash->{id});
 }
 
 #my $res = $db->getAllDocuments;
