@@ -21,6 +21,7 @@ sub setup {
 
 sub pre_process {
     my $c = shift;
+    return if !$c->cmd || $c->cmd eq 'help';
     my ($id) = @{$c->argv};
     die "id of document is required" unless defined $id;
     $c->stash->{id} = $id;
@@ -51,3 +52,68 @@ sub get {
 }
 
 #my $res = $db->getAllDocuments;
+
+
+__END__
+
+=head1 NAME
+
+couchdb-simple - A command line interface to CouchDB
+
+=head1 SYNOPSIS
+
+  Usage: couchdb-simple command [arguments]
+
+  Available Commands:
+      add   	add something
+      delete	delete something, be careful
+      get   	get it get it get it
+      help  	show syntax and available commands
+      update	update it
+
+
+  # Delete document foo
+  $ couchdb-simple delete foo
+
+  # Some commands expect to read text from stdin. You can type some text
+  # and then hit <ctrl-d> when you are done.
+  $ couchdb-simple add foo
+  {"foo":"bar"}
+  <ctrl-d>
+
+  # Or you could use piping or redirection.
+  $ echo '{"foo":"bar"}' | couchdb-simple add foo
+  $ couchdb-simple add foo < foo.json
+
+=head1 DESCRIPTION
+
+This is a command line tool to interface with CouchDB.
+
+=head1 COMMANDS
+
+=over 4
+
+=item help
+
+Print a brief help message.
+
+=item add ID
+
+Add a document with the given id.
+The contents of the document will be read from stdin.
+
+=item delete ID
+
+Delete the document with the given id.
+
+=item get ID
+
+Retrieve the document with the given id.
+
+=item update ID
+
+Update the document with the given id.
+The contents of the document will be read from stdin.
+
+=back
+
