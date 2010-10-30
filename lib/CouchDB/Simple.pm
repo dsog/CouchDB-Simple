@@ -7,14 +7,16 @@ use LWP::UserAgent;
 
 our $VERSION = 0.0001;
 
-my $agent = LWP::UserAgent->new();
-
 sub new {
     my($class, %args) = @_;
-    my $host = $args{host} || 'localhost';
-    my $port = $args{port} || 5984;
-    my $db   = $args{db}   || 'sampledb';
-    my $self = { base_uri => "http://$host:$port/$db" };
+    my $host  = $args{host}  || 'localhost';
+    my $port  = $args{port}  || 5984;
+    my $db    = $args{db}    || 'sampledb';
+    my $agent = $args{agent} || LWP::UserAgent->new();
+    my $self = {
+        agent    => $agent,
+        base_uri => "http://$host:$port/$db",
+    };
     bless $self, $class;
     return $self;
 }
@@ -23,7 +25,7 @@ sub create_document {
     my ($self, $id, $doc) = @_;
     my $json = to_json($doc);
     my $req = HTTP::Request->new(PUT => "$self->{base_uri}/$id", [], $json);
-    return $agent->request($req)->content;
+    return $self->{agent}->request($req)->content;
 }
 
 sub delete_document {
@@ -35,13 +37,13 @@ sub delete_document {
 
     my $uri = "$self->{base_uri}/$id?rev=$data->{_rev}";
     my $req = HTTP::Request->new(DELETE => $uri);
-    return $agent->request($req)->content;
+    return $self->{agent}->request($req)->content;
 }
 
 sub get_document {
     my ($self, $id) = @_;
     my $req = HTTP::Request->new(GET => "$self->{base_uri}/$id");
-    return $agent->request($req)->content;
+    return $self->{agent}->request($req)->content;
 }
 
 sub update_document {
@@ -54,13 +56,13 @@ sub update_document {
 
     my $req = HTTP::Request->new(PUT => "$self->{base_uri}/$id",
         [], to_json($doc));
-    return $agent->request($req)->content;
+    return $self->{agent}->request($req)->content;
 }
 
 sub get_all_documents {
     my ($self) = @_;
     my $req = HTTP::Request->new(GET => "$self->{base_uri}/_all_docs");
-    return $agent->request($req)->content;
+    return $self->{agent}->request($req)->content;
 }
 
 =head1 NAME
