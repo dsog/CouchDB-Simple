@@ -12,10 +12,10 @@ App::Rad->run();
 sub setup {
     my $c = shift;
     $c->register_commands({
-        add    => 'add something',
-        delete => 'delete something, be careful',
-        update => 'update it',
-        get    => 'get it get it get it',
+        add    => 'add a document, content is read from stdin',
+        delete => 'delete a document',
+        get    => 'get a document',
+        update => 'update a document, content is read from stdin',
     });
 }
 
@@ -23,7 +23,7 @@ sub pre_process {
     my $c = shift;
     return if !$c->cmd || $c->cmd eq 'help';
     my ($id) = @{$c->argv};
-    die "id of document is required" unless defined $id;
+    die "id of document is required\n" unless defined $id;
     $c->stash->{id} = $id;
 }
 
@@ -65,14 +65,14 @@ couchdb-simple - A command line interface to CouchDB
   Usage: couchdb-simple command [arguments]
 
   Available Commands:
-      add   	add something
-      delete	delete something, be careful
-      get   	get it get it get it
+      add   	add a document, content is read from stdin
+      delete	delete a document
+      get   	get a document
       help  	show syntax and available commands
-      update	update it
+      update	update a document, content is read from stdin
 
 
-  # Delete document foo
+  # All commands require a document id.
   $ couchdb-simple delete foo
 
   # Some commands expect to read text from stdin. You can type some text
@@ -91,26 +91,26 @@ This is a command line tool to interface with CouchDB.
 
 =head1 COMMANDS
 
-=over 4
+=over
 
 =item help
 
 Print a brief help message.
 
-=item add ID
+=item add I<id>
 
 Add a document with the given id.
 The contents of the document will be read from stdin.
 
-=item delete ID
+=item delete I<id>
 
 Delete the document with the given id.
 
-=item get ID
+=item get I<id>
 
 Retrieve the document with the given id.
 
-=item update ID
+=item update I<id>
 
 Update the document with the given id.
 The contents of the document will be read from stdin.

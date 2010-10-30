@@ -90,9 +90,19 @@ Example usage:
 
 Add a new document with the given id.
 
-=head1 AUTHOR
+=head1 AUTHORS
+
+=over
+
+=item *
 
 Khaled Hussein <khaled.hussein@gmail.com>
+
+=item *
+
+Naveed Massjouni <naveed.massjouni@rackspace.com>
+
+=back
 
 =head1 SUPPORT
 
