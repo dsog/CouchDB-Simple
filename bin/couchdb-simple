@@ -22,8 +22,10 @@ sub setup {
 sub pre_process {
     my $c = shift;
     return if !$c->cmd || $c->cmd eq 'help';
-    my ($id) = @{$c->argv};
-    die "id of document is required\n" unless defined $id;
+    my ($db, $id) = @{$c->argv};
+    die "db name and id of document is required\n"
+        unless defined $id and defined $db;
+    $c->stash->{db} = $db;
     $c->stash->{id} = $id;
 }
 
@@ -31,24 +33,24 @@ sub add {
     my $c = shift;
     my $json = do { local $/; <STDIN> };
     my $person = from_json($json);
-    return $db->create_document($c->stash->{id}, $person);
+    return $db->create_document($c->stash->{db}, $c->stash->{id}, $person);
 }
 
 sub delete {
     my $c = shift;
-    return $db->delete_document($c->stash->{id});
+    return $db->delete_document($c->stash->{db}, $c->stash->{id});
 }
 
 sub update {
     my $c = shift;
     my $json = do { local $/; <STDIN> };
     my $person = from_json($json);
-    return $db->update_document($c->stash->{id}, $person, 0);
+    return $db->update_document($c->stash->{db}, $c->stash->{id}, $person, 0);
 }
 
 sub get {
     my $c = shift;
-    return $db->get_document($c->stash->{id});
+    return $db->get_document($c->stash->{db}, $c->stash->{id});
 }
 
 #my $res = $db->getAllDocuments;
@@ -72,18 +74,18 @@ couchdb-simple - A command line interface to CouchDB
       update	update a document, content is read from stdin
 
 
-  # All commands require a document id.
-  $ couchdb-simple delete foo
+  # All commands require a database name document id.
+  $ couchdb-simple delete mydb foo
 
   # Some commands expect to read text from stdin. You can type some text
   # and then hit <ctrl-d> when you are done.
-  $ couchdb-simple add foo
+  $ couchdb-simple add mydb foo
   {"foo":"bar"}
   <ctrl-d>
 
   # Or you could use piping or redirection.
-  $ echo '{"foo":"bar"}' | couchdb-simple add foo
-  $ couchdb-simple add foo < foo.json
+  $ echo '{"foo":"bar"}' | couchdb-simple add mydb foo
+  $ couchdb-simple add mydb foo < foo.json
 
 =head1 DESCRIPTION
 
@@ -97,22 +99,22 @@ This is a command line tool to interface with CouchDB.
 
 Print a brief help message.
 
-=item add I<id>
+=item add I<db> I<id>
 
-Add a document with the given id.
+Add a document to db with the given id.
 The contents of the document will be read from stdin.
 
-=item delete I<id>
+=item delete I<db> I<id>
 
-Delete the document with the given id.
+Delete the document in db with the given id.
 
-=item get I<id>
+=item get I<db> I<id>
 
-Retrieve the document with the given id.
+Retrieve the document from db with the given id.
 
-=item update I<id>
+=item update I<db> I<id>
 
-Update the document with the given id.
+Update the document in db with the given id.
 The contents of the document will be read from stdin.
 
 =back

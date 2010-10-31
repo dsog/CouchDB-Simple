@@ -11,57 +11,56 @@ sub new {
     my($class, %args) = @_;
     my $host  = $args{host}  || 'localhost';
     my $port  = $args{port}  || 5984;
-    my $db    = $args{db}    || 'sampledb';
     my $agent = $args{agent} || LWP::UserAgent->new();
     my $self = {
         agent    => $agent,
-        base_uri => "http://$host:$port/$db",
+        base_uri => "http://$host:$port",
     };
     bless $self, $class;
     return $self;
 }
 
 sub create_document {
-    my ($self, $id, $doc) = @_;
+    my ($self, $db, $id, $doc) = @_;
     my $json = to_json($doc);
-    my $req = HTTP::Request->new(PUT => "$self->{base_uri}/$id", [], $json);
+    my $req = HTTP::Request->new(PUT => "$self->{base_uri}/$db/$id", [], $json);
     return $self->{agent}->request($req)->content;
 }
 
 sub delete_document {
-    my ($self, $id) = @_;
-    my $json = $self->get_document($id);
+    my ($self, $db, $id) = @_;
+    my $json = $self->get_document($db, $id);
     my $data = from_json($json);
 
     return $json if $data->{error};
 
-    my $uri = "$self->{base_uri}/$id?rev=$data->{_rev}";
+    my $uri = "$self->{base_uri}/$db/$id?rev=$data->{_rev}";
     my $req = HTTP::Request->new(DELETE => $uri);
     return $self->{agent}->request($req)->content;
 }
 
 sub get_document {
-    my ($self, $id) = @_;
-    my $req = HTTP::Request->new(GET => "$self->{base_uri}/$id");
+    my ($self, $db, $id) = @_;
+    my $req = HTTP::Request->new(GET => "$self->{base_uri}/$db/$id");
     return $self->{agent}->request($req)->content;
 }
 
 sub update_document {
-    my ($self, $id, $doc, $merge) = @_;
+    my ($self, $db, $id, $doc, $merge) = @_;
     $merge = 1 unless defined $merge;
 
-    my $data = from_json($self->get_document($id));
+    my $data = from_json($self->get_document($db, $id));
     $doc->{_rev} = $data->{_rev};
     $doc = { %$data, %$doc } if $merge;
 
-    my $req = HTTP::Request->new(PUT => "$self->{base_uri}/$id",
+    my $req = HTTP::Request->new(PUT => "$self->{base_uri}/$db/$id",
         [], to_json($doc));
     return $self->{agent}->request($req)->content;
 }
 
 sub get_all_documents {
-    my ($self) = @_;
-    my $req = HTTP::Request->new(GET => "$self->{base_uri}/_all_docs");
+    my ($self, $db) = @_;
+    my $req = HTTP::Request->new(GET => "$self->{base_uri}/$db/_all_docs");
     return $self->{agent}->request($req)->content;
 }
 
@@ -81,7 +80,6 @@ Example usage:
 
     use CouchDB::Simple
     my $couch = CouchDB::Simple->new(
-        db   => 'some_db',
         host => 'localhost', # defaults to 'localhost'
         port => 5984, # defaults to 5984
     );
