@@ -16,6 +16,8 @@ sub setup {
         delete => 'delete a document',
         get    => 'get a document',
         update => 'update a document, content is read from stdin',
+        #createdb => 'create a new CouchDB database',
+        #deletedb => 'delete a CouchDB database',
     });
 }
 
@@ -53,8 +55,6 @@ sub get {
     return $db->get_document($c->stash->{db}, $c->stash->{id});
 }
 
-#my $res = $db->getAllDocuments;
-
 
 __END__
 
@@ -74,7 +74,7 @@ couchdb-simple - A command line interface to CouchDB
       update	update a document, content is read from stdin
 
 
-  # All commands require a database name document id.
+  # All commands require a database name and document id.
   $ couchdb-simple delete mydb foo
 
   # Some commands expect to read text from stdin. You can type some text

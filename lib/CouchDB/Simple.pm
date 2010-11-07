@@ -20,6 +20,18 @@ sub new {
     return $self;
 }
 
+sub create_db {
+    my ($self, $db) = @_;
+    my $req = HTTP::Request->new(PUT => "$self->{base_uri}/$db");
+    return $self->{agent}->request($req)->content;
+}
+
+sub delete_db {
+    my ($self, $db) = @_;
+    my $req = HTTP::Request->new(DELETE => "$self->{base_uri}/$db");
+    return $self->{agent}->request($req)->content;
+}
+
 sub create_document {
     my ($self, $db, $id, $doc) = @_;
     my $json = to_json($doc);
