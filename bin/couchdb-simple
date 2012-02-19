@@ -16,7 +16,7 @@ sub setup {
         delete => 'delete a document',
         get    => 'get a document',
         update => 'update a document, content is read from stdin',
-        #createdb => 'create a new CouchDB database',
+        createdb => 'create a new CouchDB database',
         #deletedb => 'delete a CouchDB database',
     });
 }
@@ -24,11 +24,14 @@ sub setup {
 sub pre_process {
     my $c = shift;
     return if !$c->cmd || $c->cmd eq 'help';
-    my ($db, $id) = @{$c->argv};
-    die "db name and id of document is required\n"
-        unless defined $id and defined $db;
-    $c->stash->{db} = $db;
-    $c->stash->{id} = $id;
+    if ($c->cmd eq 'createdb'){
+        ($c->stash->{db}) = @{$c->argv};
+        die "db name is required\n" unless $c->stash->{db};
+    } else {
+        ($c->stash->{db}, $c->stash->{id}) = @{$c->argv};
+        die "db name and id of document is required\n"
+            unless $c->stash->{db} and $c->stash->{id};
+    }
 }
 
 sub add {
@@ -55,6 +58,11 @@ sub get {
     return $db->get_document($c->stash->{db}, $c->stash->{id});
 }
 
+sub createdb {
+    my $c = shift;
+    return $db->create_db($c->stash->{db});
+}
+
 
 __END__
 
@@ -67,6 +75,7 @@ couchdb-simple - A command line interface to CouchDB
   Usage: couchdb-simple command [arguments]
 
   Available Commands:
+      createdb  creates a new database
       add   	add a document, content is read from stdin
       delete	delete a document
       get   	get a document
@@ -74,7 +83,7 @@ couchdb-simple - A command line interface to CouchDB
       update	update a document, content is read from stdin
 
 
-  # All commands require a database name and document id.
+  # All commands require a database name and most require document id.
   $ couchdb-simple delete mydb foo
 
   # Some commands expect to read text from stdin. You can type some text
@@ -98,6 +107,10 @@ This is a command line tool to interface with CouchDB.
 =item help
 
 Print a brief help message.
+
+=item createdb I<db>
+
+Creates a new database.
 
 =item add I<db> I<id>
 
